@@ -84,7 +84,7 @@ async def kakao_skill(request: Request):
                 {
                     "label": "새로 입양하기 🌱",
                     "action": "message",
-                    "messageText": "상태",
+                    "messageText": "분양",
                 }
             ]
         else:
@@ -99,8 +99,12 @@ async def kakao_skill(request: Request):
                 {
                     "label": "새로 입양하기 🌱",
                     "action": "message",
-                    "messageText": "상태",
+                    "messageText": "분양",
                 }
+            ]
+        else:
+            buttons = [
+                {"label": "상태 확인 👌", "action": "message", "messageText": "상태"}
             ]
 
     # 3. 쓰다듬기 (교감)

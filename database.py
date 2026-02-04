@@ -430,13 +430,20 @@ def clean_malang(user_id, room_id):
 def special_skill(user_id, room_id):
     malang = get_or_create_malang(user_id)
     current_hp = int(malang["health"])
+
+    # [방어 로직] 체력이 너무 낮으면 기술 사용 불가
+    if current_hp <= 5:
+        msg = "⚠️ 체력이 너무 부족하여 필살기를 쓸 수 없습니다! 먼저 밥을 주세요."
+        img_url = get_malang_image(malang["level"], malang["type"])
+        return msg, img_url
+
     current_exp = int(malang["exp"])
     current_lvl = int(malang["level"])
     name = malang.get("name", "말랑이")
     current_type = malang.get("type", "typeA")
     nickname = malang.get("nickname", "집사")
     base_url = "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images"
-    image_url = get_malang_image(new_level, current_type)
+    image_url = get_malang_image(current_lvl, current_type)
 
     # 성공 확률은 현재 체력의 80% 정도
     success_rate = current_hp * 0.8
@@ -479,15 +486,15 @@ def special_skill(user_id, room_id):
         new_level += 1
         new_exp -= 100
         new_health = 100
-        lv_up_msg = "\n✨ [LEVEL UP] \n한계를 돌파하여 레벨업했습니다!"
-        image_url = get_malang_image(new_level, current_type)
-        header = "🔥⚡ [ U L T I M A T E ] ⚡🔥"
-        body_msg = (
-            f"⚔️ {name}의 필살기 전개!!\n\n"
-            f"강력한 일격으로 주변이 진동합니다!\n"
-            f"힘을 쏟아부은 {name}가 가쁜 숨을 쉽니다.{lv_up_msg}"
-        )
-        footer = "💪 다음 기술을 위해 체력을 회복하세요!"
+    lv_up_msg = "\n✨ [LEVEL UP] \n한계를 돌파하여 레벨업했습니다!"
+    image_url = get_malang_image(new_level, current_type)
+    header = "🔥⚡ [ U L T I M A T E ] ⚡🔥"
+    body_msg = (
+        f"⚔️ {name}의 필살기 전개!!\n\n"
+        f"강력한 일격으로 주변이 진동합니다!\n"
+        f"힘을 쏟아부은 {name}가 가쁜 숨을 쉽니다.{lv_up_msg}"
+    )
+    footer = "💪 다음 기술을 위해 체력을 회복하세요!"
 
     final_msg = (
         f"{header}\n\n"
