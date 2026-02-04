@@ -336,10 +336,10 @@ def stroking_malang(user_id):
     final_msg = (
         f"{header}\n\n"
         f"{body_msg}\n\n"
-        f"━━━━━━━━━━━━━━━━━\n"
+        f"━━━━━━━━━━━━━━━━\n"
         f"⭐ Lv.{malang['level'] if last_date == today else new_level} | {malang["exp"]}%\n"
         f"❤️ 체력: {malang['health'] if last_date == today else new_health}%\n"
-        f"━━━━━━━━━━━━━━━━━\n\n"
+        f"━━━━━━━━━━━━━━━━\n\n"
         f"{footer}"
     )
 

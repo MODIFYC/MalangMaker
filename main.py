@@ -22,6 +22,7 @@ async def kakao_skill(request: Request):
     buttons = [
         {"label": "상태 확인하기👌", "action": "message", "messageText": "상태"},
         {"label": "말랑이 밥 주기 🥣", "action": "message", "messageText": "밥"},
+        {"label": "쓰다듬기 🫳", "action": "message", "messageText": "쓰다듬기"},
         {"label": "필살기 쓰기⚡", "action": "message", "messageText": "기술"},
     ]
 
