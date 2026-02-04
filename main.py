@@ -48,6 +48,45 @@ async def kakao_skill(request: Request):
     malang = get_or_create_malang(user_id, nickname)
     current_lvl = int(malang["level"])
 
+    quick_replies = []
+    # 🎮 명령어 분기 처리
+    if "도움" in user_input or "헬프" in user_input:
+        msg = (
+            "📜 [ 말랑메이커 이용 가이드 ]\n"
+            "━━━━━━━━━━━━━━━━\n\n"
+            "🥣 밥 주기\n"
+            "ㄴ 체력 회복 및 소량의 경험치 획득\n\n"
+            "💕 쓰다듬기\n"
+            "ㄴ 하루 한 번! 다량의 경험치 보너스\n\n"
+            "🧹 똥 치우기\n"
+            "ㄴ 하루 두 번! 쾌적한 환경 만들기\n\n"
+            "⚡ 필살기\n"
+            "ㄴ 대박 성장 혹은... 무지개 다리 (도박!)\n\n"
+            "🔍 상태 확인\n"
+            "ㄴ 말랑이의 현재 모습과 수치 보기\n\n"
+            "🏆 랭킹 보기\n"
+            "ㄴ 우리 방 최고의 말랑이 TOP 3\n\n"
+            "🐣 새로 분양\n"
+            "ㄴ 새로운 인연을 시작 (데이터 초기화)\n\n"
+            "━━━━━━━━━━━━━━━━\n"
+            "💡 Tip: 하단의 버튼을 눌러보세요!"
+        )
+        # 도움말일 때만 하단 둥근 버튼(퀵리플라이) 추가
+        quick_replies = [
+            {"label": "밥 주기 🥣", "action": "message", "messageText": "밥"},
+            {"label": "쓰다듬기 💕", "action": "message", "messageText": "쓰다듬기"},
+            {"label": "똥치우기 💩", "action": "message", "messageText": "똥"},
+            {"label": "필살기 ⚡", "action": "message", "messageText": "기술"},
+            {"label": "랭킹 보기 🏆", "action": "message", "messageText": "랭킹"},
+        ]
+        return {
+            "version": "2.0",
+            "template": {
+                "outputs": [{"simpleText": {"text": msg}}],
+                "quickReplies": quick_replies,
+            },
+        }
+
     # 새로 분양
     if "분양" in user_input or "새로" in user_input:
         # database.py에 유저 삭제(또는 초기화) 함수를 호출
@@ -72,7 +111,6 @@ async def kakao_skill(request: Request):
             },
             {"label": "명예의 전당 🏆", "action": "message", "messageText": "랭킹"},
         ]
-
     # ==========================================
     # 🎮 명령어 분기 처리
     # ==========================================
@@ -89,7 +127,11 @@ async def kakao_skill(request: Request):
             ]
         else:
             buttons = [
-                {"label": "다른 밥 주기 🥣", "action": "message", "messageText": "밥"}
+                {
+                    "label": "다른 밥 주기 🥣",
+                    "action": "message",
+                    "messageText": "밥",
+                }
             ]
     # 2. 필살기
     elif "기술" in user_input or "필살기" in user_input:
@@ -104,7 +146,11 @@ async def kakao_skill(request: Request):
             ]
         else:
             buttons = [
-                {"label": "상태 확인 👌", "action": "message", "messageText": "상태"}
+                {
+                    "label": "상태 확인 👌",
+                    "action": "message",
+                    "messageText": "상태",
+                }
             ]
 
     # 3. 쓰다듬기 (교감)
