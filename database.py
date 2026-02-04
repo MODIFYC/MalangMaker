@@ -97,6 +97,27 @@ def get_or_create_malang(user_id, nickname="집사"):
     return new_malang
 
 
+# 말랑이 새로 분양받기
+def reset_malang_data(user_id):
+    try:
+        # 기존 데이터 삭제
+        table.delete_item(Key={"user_id": user_id})
+
+        # 새로운 말랑이 생성 (랜덤 타입)
+        new_malang = get_or_create_malang(user_id)
+
+        msg = (
+            "🐣 [ 새 로 운 인 연 ] 🐣\n\n"
+            "전설의 말랑이는 명예의 전당으로 떠나고\n"
+            "새로운 알이 도착했습니다!\n\n"
+            "이번엔 어떤 모습으로 성장할까요?"
+        )
+        # 1레벨 알 이미지 리턴
+        return msg, get_malang_image(1, new_malang["type"])
+    except Exception as e:
+        return f"분양 과정에서 오류가 발생했어요: {e}", None
+
+
 # ==========================================
 # 🎮 4. 말랑이 육성 액션 (USER ACTIONS)
 # - 밥 주기, 교감, 똥 치우기, 필살기

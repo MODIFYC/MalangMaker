@@ -9,6 +9,7 @@ from database import (
     get_malang_image,
     get_malang_description,
     get_room_rankings_top3,
+    reset_malang_data,
 )
 
 app = FastAPI()
@@ -42,10 +43,41 @@ async def kakao_skill(request: Request):
     buttons = default_buttons
 
     # ==========================================
+    # 초기화 및 만렙 확인
+    # ==========================================
+    malang = get_or_create_malang(user_id, nickname)
+    current_lvl = int(malang["level"])
+
+    # 새로 분양
+    if "분양" in user_input or "새로" in user_input:
+        # database.py에 유저 삭제(또는 초기화) 함수를 호출
+        msg, img_url = reset_malang_data(user_id)
+
+    # 만렙 제한 로직 (밥, 쓰다듬기, 기술 방어)
+    elif current_lvl >= 15 and user_input in ["밥", "쓰다듬기", "기술", "교감"]:
+        msg = (
+            "✨ [ 전 설 의 영 역 ] ✨\n\n"
+            "이 말랑이는 이미 정점에 도달하여\n"
+            "더 이상의 수행이 필요하지 않습니다.\n\n"
+            "현재 상태를 유지하며 명예를 누리거나,\n"
+            "새로운 말랑이를 분양받아보세요!"
+        )
+        img_url = get_malang_image(15, malang["type"])
+        buttons = [
+            {"label": "현재 상태 유지 👌", "action": "message", "messageText": "상태"},
+            {
+                "label": "새로 분양 받기 ✨",
+                "action": "message",
+                "messageText": "분양",
+            },
+            {"label": "명예의 전당 🏆", "action": "message", "messageText": "랭킹"},
+        ]
+
+    # ==========================================
     # 🎮 명령어 분기 처리
     # ==========================================
     # 1. 밥 주기
-    if "밥" in user_input:
+    elif "밥" in user_input:
         msg, img_url = feed_malang(user_id, room_id)
         if img_url and "dead" in img_url:
             buttons = [
