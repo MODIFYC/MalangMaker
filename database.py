@@ -593,4 +593,7 @@ def get_room_rankings_top3(room_id):
         f"{footer}"
     )
 
-    return final_msg, "https://t1.kakaocdn.net/open_chat/default_image.png"
+    return (
+        final_msg,
+        "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images/rank_default.png",
+    )
