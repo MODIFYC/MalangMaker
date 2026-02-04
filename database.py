@@ -80,7 +80,7 @@ def feed_malang(user_id):
         new_level += 1
         new_health = 100
         new_exp = 0
-        header = "💎 ─── 👑 [ L E G E N D ] 👑 ─── 💎"
+        header = "💎👑 [ L E G E N D ] 👑💎"
         body_msg = random.choice(legend_feedback)
         footer = "🌟 전설의 말랑이가 탄생했습니다!"
 
@@ -88,7 +88,7 @@ def feed_malang(user_id):
     elif rand_val < 0.155:
         damage = random.randint(15, 30)
         new_health -= damage
-        header = "💀 ─── ⛈️ [ F A I L ] ⛈️ ─── 💀"
+        header = "💀⛈️ [ F A I L ] ⛈️💀"
         body_msg = random.choice(bad_feedback)
         footer = "💊 얼른 신선한 밥을 줘야겠어요..."
 
@@ -102,7 +102,7 @@ def feed_malang(user_id):
         food = random.choice(normal_foods)
         new_health += food["heal"]
         new_exp += food["exp"]
-        header = "✨ ─── 🎊 [ SUCCESS ] 🎊 ─── ✨"
+        header = "✨ 🎊 [ SUCCESS ] 🎊 ✨"
         body_msg = random.choice(normal_feedback).format(food_name=food["name"])
         footer = "🍀 말랑이가 다음 밥을 기다려요!"
 
@@ -112,16 +112,16 @@ def feed_malang(user_id):
         new_level += 1
         new_exp -= 100
         new_health = 100
-        body_msg += "\n\n✨ [LEVEL UP] 경험치가 꽉 차서 레벨업했어!"
+        body_msg += "\n\n✨ [LEVEL UP]\n경험치가 꽉 차서 레벨업했어!"
 
     # 4. 최종 메시지 조립 (여백과 줄바꿈 강조)
     final_msg = (
         f"{header}\n\n"
         f"{body_msg}\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"⭐ Lv.{new_level} - {new_exp}%\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"⭐ Lv.{new_level} | {new_exp}%\n"
         f"❤️ 체력: {new_health}%\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"━━━━━━━━━━━━━━━━\n"
         f"{footer}"
     )
 
@@ -133,7 +133,7 @@ def feed_malang(user_id):
         ExpressionAttributeValues={":h": new_health, ":e": new_exp, ":l": new_level},
     )
 
-    return final_msg, new_health, new_exp, new_level
+    return final_msg, new_health
 
 
 # 말랑이 체력 확인하기
@@ -177,20 +177,20 @@ def special_skill(user_id):
     if not is_success:
         table.delete_item(Key={"user_id": user_id})
 
-        header = "🚨 ─── 🧨 [ CRITICAL ERROR ] 🧨 ─── 🚨"
+        header = "🚨🧨 [ CRITICAL ERROR ] 🧨🚨"
         body_msg = (
             f"💥 콰광!!! 에너지가 폭주합니다!\n\n"
             f"{name}가 기술의 반동을 견디지 못하고\n"
             f"공중에서 산산조각나 버렸습니다..."
         )
-        footer = "💀 말랑이의 명복을 빕니다 (데이터 삭제됨)"
+        footer = "💀 말랑이의 명복을 빕니다"
 
         final_msg = (
             f"{header}\n\n"
             f"{body_msg}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"━━━━━━━━━━━━━━━━\n"
             f"📉 최종 레벨: Lv.{current_lvl}\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"━━━━━━━━━━━━━━━━\n\n"
             f"{footer}"
         )
         return None, final_msg
@@ -208,9 +208,9 @@ def special_skill(user_id):
         new_level += 1
         new_exp -= 100
         new_health = 100
-        lv_up_msg = "\n✨ [LEVEL UP] 한계를 돌파하여 레벨업했습니다!"
+        lv_up_msg = "\n✨ [LEVEL UP] \n한계를 돌파하여 레벨업했습니다!"
 
-    header = "🔥 ─── ⚡ [ U L T I M A T E ] ⚡ ─── 🔥"
+    header = "🔥⚡ [ U L T I M A T E ] ⚡🔥"
     body_msg = (
         f"⚔️ {name}의 필살기 전개!!\n\n"
         f"강력한 일격으로 주변이 진동합니다!\n"
@@ -221,10 +221,10 @@ def special_skill(user_id):
     final_msg = (
         f"{header}\n\n"
         f"{body_msg}\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"⭐ Lv.{new_level} - {new_exp}%\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"⭐ Lv.{new_level} | {new_exp}%\n"
         f"❤️ 남은 체력: {new_health}%\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"━━━━━━━━━━━━━━━━\n\n"
         f"{footer}"
     )
 
@@ -268,13 +268,13 @@ def get_malang_status(user_id):
 
     # 화려한 전광판 스타일 레이아웃 조립
     status_msg = (
-        f"📊 ─── 🔍 [ S T A T U S ] 🔍 ─── 📊\n\n"
+        f"📊🔍 [ S T A T U S ] 🔍📊\n\n"
         f"🐾 이름: {name}\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"⭐ 레벨: {level}\n"
-        f"❤️ 체력: {health} / {max_health}\n"
-        f"✨ 경험치: {exp} / 100\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"⭐ 레벨: {level} | 경험치: {exp}%\n"
+        f"❤️ 남은 체력: {max_health}%\n"
+        f"✨ 경험치: {exp}%\n"
+        f"━━━━━━━━━━━━━━━━\n\n"
         f"{random_feeling}"
     )
 

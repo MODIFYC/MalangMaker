@@ -26,19 +26,14 @@ async def kakao_skill(request: Request):
 
     if "밥" in user_input:
         # 1. 밥 먹기 로직 실행 및 결과 메시지(result_msg)와 현재 수치들 가져오기
-        msg, current_hp, current_exp, current_lvl = feed_malang(user_id)
+        msg, current_hp = feed_malang(user_id)
         if current_hp <= 0:
-            msg = f"💀 곰팡이 핀 토마토를 먹고 말랑이가 결국 쓰러졌어... \n새로운 말랑이를 찾아보자."
+            msg = f"💀 상한 음식을 먹고 말랑이가 결국 쓰러졌어... \n새로운 말랑이를 찾아보자."
             buttons = [
                 {"label": "새로 시작하기", "action": "message", "messageText": "상태"}
             ]
         else:
-            msg = (
-                f"{msg}\n"
-                f"--------------------\n"
-                f"⭐ Lv.{current_lvl} {current_exp}%\n"
-                f"❤️ 체력: {current_hp}%"
-            )
+            msg = msg
             buttons = [
                 {"label": "다른 밥 주기 🥣", "action": "message", "messageText": "밥"}
             ]
@@ -61,7 +56,7 @@ async def kakao_skill(request: Request):
         pass
 
     else:
-        msg = "말랑말랑? 아래 버튼을 클릭해봐!"
+        msg = ""
 
     # 최종 응답 구조 (TextCard 적용)
     return {
