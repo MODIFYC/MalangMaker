@@ -209,13 +209,13 @@ def special_skill(user_id):
         new_health = 100
         lv_up_msg = "\n✨ [LEVEL UP] \n한계를 돌파하여 레벨업했습니다!"
 
-    header = "🔥⚡ [ U L T I M A T E ] ⚡🔥"
-    body_msg = (
-        f"⚔️ {name}의 필살기 전개!!\n\n"
-        f"강력한 일격으로 주변이 진동합니다!\n"
-        f"힘을 쏟아부은 {name}가 가쁜 숨을 쉽니다.{lv_up_msg}"
-    )
-    footer = "💪 다음 기술을 위해 체력을 회복하세요!"
+        header = "🔥⚡ [ U L T I M A T E ] ⚡🔥"
+        body_msg = (
+            f"⚔️ {name}의 필살기 전개!!\n\n"
+            f"강력한 일격으로 주변이 진동합니다!\n"
+            f"힘을 쏟아부은 {name}가 가쁜 숨을 쉽니다.{lv_up_msg}"
+        )
+        footer = "💪 다음 기술을 위해 체력을 회복하세요!"
 
     final_msg = (
         f"{header}\n\n"
@@ -341,6 +341,102 @@ def stroking_malang(user_id):
         f"❤️ 체력: {malang['health'] if last_date == today else new_health}%\n"
         f"━━━━━━━━━━━━━━━━\n\n"
         f"{footer}"
+    )
+
+    return final_msg
+
+
+# 똥치우기
+def clean_malang(user_id):
+    malang = get_or_create_malang(user_id)
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    # DB에서 날짜와 횟수 가져오기 (없으면 초기값)
+    last_date = malang.get("last_clean_date", "")
+    clean_count = int(malang.get("clean_count", 0))
+    name = malang.get("name", "말랑이")
+
+    # 날짜가 바뀌었으면 횟수 초기화
+    if last_date != today:
+        clean_count = 0
+
+    msg_result = ""
+    new_health = int(malang["health"])
+    new_exp = int(malang["exp"])
+    new_level = int(malang["level"])
+
+    # 1. [1회차] 아침의 대청소
+    if clean_count == 0:
+        new_health = min(100, new_health + 20)
+        new_exp += 15
+        clean_count = 1
+        header = "💩🧹 [ 1st S W E E P ] 🧹💩"
+        body_msg = (
+            "밤새 말랑이가 엄청난 걸 생산해놨군요!\n\n"
+            "코를 막고 구석구석 깨끗이 치웠습니다.\n"
+            "말랑이가 부끄러운지 몸을 숨기네요. 🫣"
+        )
+        footer = "🎁 대청소 보상: 체력 +20 / 경험치 +15"
+
+    # 2. [2회차] 오후의 깔끔관리
+    elif clean_count == 1:
+        new_health = min(100, new_health + 10)
+        new_exp += 5
+        clean_count = 2
+        header = "✨🧼 [ 2nd S W E E P ] 🧼✨"
+        body_msg = (
+            "오후에 생긴 작은 흔적까지 깔끔하게!\n\n"
+            "환경이 쾌적해지자 말랑이가\n"
+            "기분이 좋아져서 퐁신퐁신하게 부풀어 올랐어요! 🎈"
+        )
+        footer = "🍀 관리 보상: 체력 +10 / 경험치 +5"
+
+    # 3. [회수 초과] 이미 너무 깨끗함
+    else:
+        header = "🚫🌈 [ P E R F E C T ] 🌈🚫"
+        body_msg = (
+            "말랑이 집에서 빛이 나고 있어요!\n\n"
+            "이미 오늘 두 번이나 청소하셨잖아요.\n"
+            "내일 다시 똥이 쌓이길 기다려주세요! 💤"
+        )
+        footer = "🧹 환경 미화원 칭호 획득 대기 중..."
+
+    # 레벨업 체크 및 DB 업데이트 로직 (생략 - 이전과 동일)
+    lv_up_msg = ""
+    if new_exp >= 100:
+        new_level += 1
+        new_exp -= 100
+        new_health = 100
+        lv_up_msg = "\n✨ [LEVEL UP] \n한계를 돌파하여 레벨업했습니다!"
+        header = "🔥⚡ [ U L T I M A T E ] ⚡🔥"
+        body_msg = (
+            f"⚔️ {name}의 필살기 전개!!\n\n"
+            f"강력한 일격으로 주변이 진동합니다!\n"
+            f"힘을 쏟아부은 {name}가 가쁜 숨을 쉽니다.{lv_up_msg}"
+        )
+        footer = "💪 다음 기술을 위해 체력을 회복하세요!"
+
+    # 최종 메시지 조립
+    final_msg = (
+        f"{header}\n\n"
+        f"{body_msg}\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"⭐ Lv.{new_level} | {new_exp}%\n"
+        f"❤️ 체력: {new_health}%\n"
+        f"━━━━━━━━━━━━━━━━\n\n"
+        f"{footer}"
+    )
+
+    # DB 업데이트 (횟수와 날짜 저장)
+    table.update_item(
+        Key={"user_id": user_id},
+        UpdateExpression="set health=:h, exp=:e, last_clean_date=:d, clean_count=:c",
+        ExpressionAttributeValues={
+            ":h": new_health,
+            ":e": new_exp,
+            ":d": today,
+            ":c": clean_count,
+        },
     )
 
     return final_msg
