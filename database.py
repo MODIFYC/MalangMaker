@@ -46,6 +46,21 @@ def get_or_create_malang(user_id):
     return item
 
 
+# 이미지 매칭 함수
+def get_malang_image(level, malang_type="basic"):
+    # 1. 레벨에 따른 이미지 번호 결정 (최대 15장 기준)
+    # 레벨이 15를 넘어가면 계속 15번 이미지를 보여주도록 제한(clamping)
+    img_num = min(level, 15)
+
+    # 2. 깃허브 Raw 이미지 기본 경로
+    base_url = "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images"
+
+    # 3. 최종 URL 조립 (예: typeA (1).png)
+    image_url = f"{base_url}/{malang_type} ({img_num}).png"
+
+    return image_url
+
+
 # 말랑이 먹이주기
 def feed_malang(user_id):
     malang = get_or_create_malang(user_id)
@@ -437,6 +452,64 @@ def clean_malang(user_id):
             ":d": today,
             ":c": clean_count,
         },
+    )
+
+    return final_msg
+
+
+# 랭킹
+def get_room_rankings_top3(room_id):
+    # 1. 우리 방(room_id) 데이터만 필터링해서 스캔
+    # (SAA 팁: 운영 단계에서는 FilterExpression보다 GSI + Query가 훨씬 효율적!)
+    from boto3.dynamodb.conditions import Attr
+
+    response = table.scan(FilterExpression=Attr("room_id").eq(room_id))
+    items = response.get("Items", [])
+
+    if not items:
+        return "이 방에는 아직 등록된 말랑이가 없어요! 🌱"
+
+    # 2. 레벨 -> 경험치 순으로 정렬 (내림차순)
+    sorted_items = sorted(
+        items,
+        key=lambda x: (int(x.get("level", 1)), int(x.get("exp", 0))),
+        reverse=True,
+    )
+
+    # 3. 상위 3명만 추출
+    top_3 = sorted_items[:3]
+
+    header = "🏆 ─── ✨ [ TOP 3 RANK ] ✨ ─── 🏆"
+
+    # 4. 랭킹 텍스트 조립 (유저 언급 포함)
+    rank_list_text = ""
+    medals = ["🥇", "🥈", "🥉"]
+
+    for i, user in enumerate(top_3):
+        # DB에 저장된 유저 닉네임 또는 말랑이 이름을 가져옴
+        nickname = user.get("nickname", "익명의 집사")
+        malang_name = user.get("name", "말랑이")
+        lvl = user.get("level", 1)
+
+        # 유저를 언급하는 느낌으로 구성
+        rank_list_text += f"{medals[i]} {nickname}님 (Lv.{lvl} {malang_name})\n"
+
+    body_msg = (
+        f"이 채팅방의 전설적인 집사들!\n"
+        f"영광의 상위 3인을 공개합니다.\n\n"
+        f"{rank_list_text}"
+    )
+
+    footer = "✨ 나머지 분들도 분발해서 3위 안에 드세요!"
+
+    # 확정된 UI 레이아웃 적용
+    final_msg = (
+        f"{header}\n\n"
+        f"{body_msg}\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"📍 {room_id[:8]}... 방 랭킹\n"
+        f"━━━━━━━━━━━━━━━━\n\n"
+        f"{footer}"
     )
 
     return final_msg
