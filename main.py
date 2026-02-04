@@ -37,7 +37,6 @@ async def kakao_skill(request: Request):
     default_buttons = [
         {"label": "상태 확인하기👌", "action": "message", "messageText": "상태"},
         {"label": "말랑이 밥 주기 🥣", "action": "message", "messageText": "밥"},
-        {"label": "쓰다듬기 🫳", "action": "message", "messageText": "쓰다듬기"},
         {"label": "필살기 쓰기⚡", "action": "message", "messageText": "기술"},
     ]
     buttons = default_buttons
@@ -90,6 +89,9 @@ async def kakao_skill(request: Request):
     elif "랭킹" in user_input or "순위" in user_input:
         msg, img_url = get_room_rankings_top3(room_id)
         title_text = "🏆 실시간 채팅방 랭킹"  # 타이틀 변경
+        buttons = [
+            {"label": "내 상태 확인 👌", "action": "message", "messageText": "상태"}
+        ]
 
     # 6. 상태 확인 (기본)
     elif "상태" in user_input:
@@ -118,5 +120,4 @@ async def kakao_skill(request: Request):
             ]
         },
     }
-    print(f"DEBUG: 최종 전송 이미지 URL -> {img_url}")
     return res_card

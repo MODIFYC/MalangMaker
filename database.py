@@ -549,11 +549,10 @@ def get_room_rankings_top3(room_id):
         key=lambda x: (int(x.get("level", 1)), int(x.get("exp", 0))),
         reverse=True,
     )
-
     # 2. 상위 3명만 추출
     top_3 = sorted_items[:3]
 
-    header = "🏆✨ [ TOP 3 RANK ] ✨🏆"
+    header = ""
 
     # 3. 랭킹 리스트 텍스트 조립
     rank_list_text = ""
