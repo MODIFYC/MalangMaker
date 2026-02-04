@@ -30,7 +30,7 @@ async def kakao_skill(request: Request):
 
     # 2. 기본 변수 초기화
     msg = ""
-    img_url = "https://t1.kakaocdn.net/open_chat/default_image.png"
+    img_url = "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images/default_image.png"
     title_text = f"🐾 {nickname}님의 말랑이"  # 기본 타이틀
 
     # 기본 버튼 리스트
