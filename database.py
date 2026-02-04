@@ -3,6 +3,8 @@ import os
 import random
 from dotenv import load_dotenv
 from decimal import Decimal
+from datetime import datetime
+import random
 
 load_dotenv()
 
@@ -159,9 +161,6 @@ def update_health(user_id, amount):
 
 
 # 스킬로 성장하기
-import random
-
-
 def special_skill(user_id):
     malang = get_or_create_malang(user_id)
     current_hp = int(malang["health"])
@@ -279,3 +278,69 @@ def get_malang_status(user_id):
     )
 
     return status_msg
+
+
+# 교감하기
+def stroking_malang(user_id):
+    malang = get_or_create_malang(user_id)
+
+    # 오늘 날짜 구하기 (YYYY-MM-DD)
+    today = datetime.now().strftime("%Y-%m-%d")
+    last_date = malang.get("last_stroking_malang", "")
+
+    # 1. 이미 오늘 교감했다면?
+    if last_date == today:
+        header = "🐾✨ [ R E J E C T ] ✨🐾"
+        body_msg = (
+            f"말랑이는 이미 충분히 사랑받았어요!\n\n"
+            f"지금은 기분 좋게 낮잠을 자고 있네요.\n"
+            f"내일 다시 쓰다듬어주세요! 💤"
+        )
+        footer = "🌙 말랑이가 꿈속에서 당신을 만난대요."
+
+    # 2. 오늘 처음 교감하는 거라면?
+    else:
+        # 보상 설정 (체력 30 회복, 경험치 20 획득)
+        new_health = min(100, int(malang["health"]) + 30)
+        new_exp = int(malang["exp"]) + 20
+        new_level = int(malang["level"])
+
+        # 레벨업 체크
+        if new_exp >= 100:
+            new_level += 1
+            new_exp -= 100
+            new_health = 100
+
+        # DB 업데이트 (오늘 날짜 기록)
+        table.update_item(
+            Key={"user_id": user_id},
+            UpdateExpression="set health=:h, exp=:e, #lvl=:l, last_stroking_malang=:d",
+            ExpressionAttributeNames={"#lvl": "level"},
+            ExpressionAttributeValues={
+                ":h": new_health,
+                ":e": new_exp,
+                ":l": new_level,
+                ":d": today,
+            },
+        )
+
+        header = "🌕🛏️ [ C O M F O R T ] 🛏️🌕"
+        body_msg = (
+            f"당신의 따뜻한 손길이 닿았습니다!\n\n"
+            f"말랑이가 기분이 좋아져서 몸을 배베 꼬며\n"
+            f"당신의 손에 머리를 부비적거려요! 😍"
+        )
+        footer = "📈 체력 +30 / 경험치 +20 보너스!"
+
+    # 최종 메시지 조립
+    final_msg = (
+        f"{header}\n\n"
+        f"{body_msg}\n\n"
+        f"━━━━━━━━━━━━━━━━━\n"
+        f"⭐ Lv.{malang['level'] if last_date == today else new_level} | {malang["exp"]}%\n"
+        f"❤️ 체력: {malang['health'] if last_date == today else new_health}%\n"
+        f"━━━━━━━━━━━━━━━━━\n\n"
+        f"{footer}"
+    )
+
+    return final_msg

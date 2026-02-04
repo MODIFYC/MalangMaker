@@ -6,6 +6,7 @@ from database import (
     feed_malang,
     special_skill,
     get_malang_status,
+    stroking_malang,
 )
 
 app = FastAPI()
@@ -50,6 +51,12 @@ async def kakao_skill(request: Request):
             buttons = [
                 {"label": "상태 확인 👌", "action": "message", "messageText": "상태"}
             ]
+    elif "쓰다듬기" in user_input or "교감" in user_input:
+        msg = stroking_malang(user_id)
+        buttons = [
+            {"label": "밥 주기 🥣", "action": "message", "messageText": "밥"},
+            {"label": "상태 확인 👌", "action": "message", "messageText": "상태"},
+        ]
     elif "상태" in user_input:
         msg = get_malang_status(user_id)
         # 상태창에서는 모든 버튼 다 보여주기
