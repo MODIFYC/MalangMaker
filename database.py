@@ -91,7 +91,6 @@ def get_or_create_malang(user_id, nickname="집사"):
             "health": int(item.get("health", 100)),
             "exp": int(item.get("exp", 0)),
             "room_id": item.get("room_id", "none"),
-            # ★ 이 녀석이 범인이었지? ★
             "last_stroking_malang": item.get("last_stroking_malang", ""),
             "last_clean_date": item.get("last_clean_date", ""),
             "clean_count": int(item.get("clean_count", 0)),
