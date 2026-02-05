@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from decimal import Decimal
 from datetime import datetime
 import random
+from descriptions import get_malang_data
 
 load_dotenv()
 
@@ -52,15 +53,22 @@ def get_system_image(filename):
 
 
 # 레벨별 묘사
-def get_malang_description(level):
-    if level < 5:
-        return "✨ 말랑말랑해서 손에 쥐면 기분이 정말 좋을 것 같아요! 아직은 작고 소중한 아기 상태입니다."
-    elif level < 10:
-        return "💪 제법 탄력이 생겼어요! 이제는 손바닥 전체로 느껴지는 묵직한 존재감이 일품입니다."
-    elif level < 15:
-        return "🔥 에너지가 넘쳐흐릅니다! 가만히 있어도 기분 좋은 온기가 느껴지고, 가끔 혼자 통통 튀어 올라요."
-    else:
-        return "👑 전설의 말랑이입니다! 보고만 있어도 마음이 평온해지는 신비로운 아우라가 뿜어져 나옵니다."
+def get_malang_response_content(user_id, is_dead=False):
+    # 1. DB에서 유저 정보 조회
+    malang = get_or_create_malang(user_id)
+    lvl = int(malang.get("level", 1))
+    m_type = malang.get("type", "typeA")
+    nickname = malang.get("nickname", "집사")
+
+    # 2. 전용 모듈에서 텍스트 데이터 가져오기
+    title_tag, desc = get_malang_data(m_type, lvl, is_dead)
+    emoji = title_tag[-1]  # 맨 뒤 한 글자 (이모지)
+    pure_tag = title_tag[:-1].strip()
+
+    return {
+        "title": f"{emoji} {nickname}의 {title_tag}",
+        "description": desc,
+    }
 
 
 # ==========================================
@@ -236,14 +244,11 @@ def feed_malang(user_id, room_id):
 
     # 이미지 & 설명 가져오기
     image_url = get_malang_image(new_level, malang_type)
-    description = get_malang_description(new_level)
 
     # 5. 최종 메시지 조립 (여백과 줄바꿈 강조)
     final_msg = (
         f"{header}\n\n"
         f"{body_msg}{lv_up_msg}\n\n"
-        f"💡 {description}\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
         f"⭐ Lv.{new_level} | {new_exp}%\n"
         f"❤️ 체력: {new_health}%\n"
         f"━━━━━━━━━━━━━━━━\n"
@@ -319,7 +324,6 @@ def stroking_malang(user_id, room_id):
 
         header = "🌕🛏️ [ C O M F O R T ] 🛏️🌕"
         body_msg = (
-            f"오늘은 {today}!\n"
             f"당신의 따뜻한 손길이 닿았습니다!\n\n"
             f"말랑이가 기분이 좋아져서 몸을 배베 꼬며\n"
             f"당신의 손에 머리를 부비적거려요! 😍"
@@ -620,13 +624,6 @@ def get_room_rankings_top3(room_id):
     footer = "✨ 1위의 자리를 노려보세요!"
 
     # 4. 최종 메시지 조립 (기깔나는 UI 적용)
-    final_msg = (
-        f"{header}\n\n"
-        f"{body_msg}\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
-        f"📍 채팅방 실시간 랭킹\n"
-        f"━━━━━━━━━━━━━━━━\n\n"
-        f"{footer}"
-    )
+    final_msg = f"{header}\n\n" f"{body_msg}\n\n" f"━━━━━━━━━━━━━━━━\n" f"{footer}"
 
     return (final_msg, get_system_image("rank_default"))

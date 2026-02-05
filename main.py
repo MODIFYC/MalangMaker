@@ -7,9 +7,9 @@ from database import (
     stroking_malang,
     clean_malang,
     get_malang_image,
-    get_malang_description,
     get_room_rankings_top3,
     reset_malang_data,
+    get_malang_response_content,
 )
 
 app = FastAPI()
@@ -28,11 +28,11 @@ async def kakao_skill(request: Request):
     user_input = data["userRequest"]["utterance"].strip()
     # 닉네임 정하기
     nickname = data["userRequest"]["user"].get("properties", {}).get("nickname", "집사")
-
+    if len(nickname) > 5:
+        nickname = nickname[:5] + ".."
     # 2. 기본 변수 초기화
     msg = ""
     img_url = "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images/default_image.png"
-    title_text = f"🐾 {nickname}님의 말랑이"  # 기본 타이틀
 
     # 기본 버튼 리스트
     default_buttons = [
@@ -170,7 +170,6 @@ async def kakao_skill(request: Request):
     # 5. 랭킹 확인
     elif "랭킹" in user_input or "순위" in user_input:
         msg, img_url = get_room_rankings_top3(room_id)
-        title_text = "🏆 실시간 채팅방 랭킹"  # 타이틀 변경
         buttons = [
             {"label": "내 상태 확인 👌", "action": "message", "messageText": "상태"}
         ]
@@ -182,18 +181,19 @@ async def kakao_skill(request: Request):
     # 7. 예외 처리
     else:
         msg, img_url = get_malang_status(user_id)
-        title_text = f"어서와! {nickname} 집사!"
 
     # ==========================================
     # 📤 최종 응답 조립 (TextCard)
     # ==========================================
+    content = get_malang_response_content(user_id)
+    msg = f"{content["description"]}\n\n" f"=============================\n\n" f"{msg}"
     res_card = {
         "version": "2.0",
         "template": {
             "outputs": [
                 {
-                    "basicCard": {  # textCard에서 변경
-                        "title": title_text,
+                    "basicCard": {
+                        "title": content["title"],
                         "description": msg,
                         "thumbnail": {"imageUrl": img_url},
                         "buttons": buttons,
