@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from decimal import Decimal
 from datetime import datetime
 import random
-from descriptions import get_malang_data
+from descriptions import get_malang_data, USER_TITLES
 
 load_dotenv()
 
@@ -58,14 +58,16 @@ def get_malang_response_content(user_id, is_dead=False):
     malang = get_or_create_malang(user_id)
     lvl = int(malang.get("level", 1))
     m_type = malang.get("type", "typeA")
+
     nickname = malang.get("nickname", "집사")
+    prefix = USER_TITLES.get(nickname, "집사")
 
     # 2. 전용 모듈에서 텍스트 데이터 가져오기
     title_tag, desc = get_malang_data(m_type, lvl, is_dead)
     emoji = title_tag[-1]  # 맨 뒤 한 글자 (이모지)
 
     return {
-        "title": f"{emoji} {nickname}의 {title_tag}",
+        "title": f"{emoji} {prefix}의 {title_tag}",
         "description": desc,
     }
 
