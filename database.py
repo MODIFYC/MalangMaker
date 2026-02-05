@@ -31,12 +31,12 @@ def get_malang_image(level, malang_type="typeA", is_dead=False):
     # 레벨 제한 (1~15)
     img_num = max(1, min(15, int(level)))
 
+    # 깃허브 Raw 이미지 기본 경로
+    base_url = "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images"
+
     # 만약 죽은 상태라면 해당 타입 폴더의 dead.png 리턴
     if is_dead:
         return f"{base_url}/{malang_type}/dead.png"
-
-    # 깃허브 Raw 이미지 기본 경로
-    base_url = "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images"
 
     # 파일명 규칙: typeA/1.png
     image_url = f"{base_url}/{malang_type}/{img_num}.png"
@@ -63,7 +63,6 @@ def get_malang_response_content(user_id, is_dead=False):
     # 2. 전용 모듈에서 텍스트 데이터 가져오기
     title_tag, desc = get_malang_data(m_type, lvl, is_dead)
     emoji = title_tag[-1]  # 맨 뒤 한 글자 (이모지)
-    pure_tag = title_tag[:-1].strip()
 
     return {
         "title": f"{emoji} {nickname}의 {title_tag}",
@@ -409,7 +408,7 @@ def clean_malang(user_id, room_id):
 
     # 최종 메시지 조립
     image_url = get_malang_image(new_level, malang_type)
-    description = get_malang_description(new_level)
+    description = get_malang_data(malang_type, new_level)
 
     final_msg = (
         f"{header}\n\n"

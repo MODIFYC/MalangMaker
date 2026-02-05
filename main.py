@@ -186,19 +186,30 @@ async def kakao_skill(request: Request):
     # 📤 최종 응답 조립 (TextCard)
     # ==========================================
     content = get_malang_response_content(user_id)
-    msg = f"{content["description"]}\n\n" f"=============================\n\n" f"{msg}"
+
+    # 말랑이의 정보 (타이틀과 설명)
+    malang_desc = content["description"]
+    malang_title = content["title"]
+
     res_card = {
         "version": "2.0",
         "template": {
             "outputs": [
                 {
+                    # 상태창 중심: 실제 수치 정보 (msg)
+                    "simpleText": {
+                        "text": msg,
+                    }
+                },
+                {
+                    # 비주얼 중심: 이미지 + 타이틀 + 세계관 설명
                     "basicCard": {
-                        "title": content["title"],
-                        "description": msg,
+                        "title": malang_title,
+                        "description": malang_desc,
                         "thumbnail": {"imageUrl": img_url},
                         "buttons": buttons,
                     }
-                }
+                },
             ]
         },
     }
