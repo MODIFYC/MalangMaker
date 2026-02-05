@@ -25,18 +25,30 @@ table = dynamodb.Table("MalangUsers")
 # 🛠️ 2. 유틸리티 함수 (UTILITIES)
 # - 이미지 매칭, 묘사 생성 등 보조 도구
 # ==========================================
-# 이미지 매칭 함수
-def get_malang_image(level, malang_type="typeA"):
+# 말랑이 이미지 매칭 함수
+def get_malang_image(level, malang_type="typeA", is_dead=False):
     # 레벨 제한 (1~15)
-    img_num = min(level, 15)
+    img_num = max(1, min(15, int(level)))
 
-    # 2. 깃허브 Raw 이미지 기본 경로
+    # 만약 죽은 상태라면 해당 타입 폴더의 dead.png 리턴
+    if is_dead:
+        return f"{base_url}/{malang_type}/dead.png"
+
+    # 깃허브 Raw 이미지 기본 경로
     base_url = "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images"
 
-    # 파일명 규칙: typeA_1.png
-    image_url = f"{base_url}/{malang_type}_{img_num}.png"
+    # 파일명 규칙: typeA/1.png
+    image_url = f"{base_url}/{malang_type}/{img_num}.png"
 
     return image_url
+
+
+# 시스템 이미지 매칭 함수
+def get_system_image(filename):
+    base_url = (
+        "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images/system"
+    )
+    return f"{base_url}/{filename}.png"
 
 
 # 레벨별 묘사
@@ -190,8 +202,7 @@ def feed_malang(user_id, room_id):
         table.delete_item(Key={"user_id": user_id})
 
         # 2. 터진 이미지 URL 설정 (dead.png)
-        base_url = "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images"
-        dead_image_url = f"{base_url}/{malang_type}_dead.png"
+        dead_image_url = get_malang_image(new_level, malang_type, True)
 
         # 3. 유언(?) 메시지 조립
         header = "☠️🌫️ [ G A M E O V E R ] 🌫️☠️"
@@ -441,7 +452,6 @@ def special_skill(user_id, room_id):
     name = malang.get("name", "말랑이")
     current_type = malang.get("type", "typeA")
     nickname = malang.get("nickname", "집사")
-    base_url = "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images"
     image_url = get_malang_image(current_lvl, current_type)
 
     # 성공 확률은 현재 체력의 80% 정도
@@ -452,7 +462,7 @@ def special_skill(user_id, room_id):
     if not is_success:
         table.delete_item(Key={"user_id": user_id})
         # 유저가 키우던 타입에 맞는 죽음 이미지 매칭 (예: typeB_dead.png)
-        dead_image_url = f"{base_url}/{current_type}_dead.png"
+        dead_image_url = get_malang_image(current_lvl, current_type, True)
 
         header = "🚨🧨 [ CRITICAL ERROR ] 🧨🚨"
         body_msg = (
@@ -619,7 +629,4 @@ def get_room_rankings_top3(room_id):
         f"{footer}"
     )
 
-    return (
-        final_msg,
-        "https://raw.githubusercontent.com/MODIFYC/MalangMaker/main/images/rank_default.png",
-    )
+    return (final_msg, get_system_image("rank_default"))
