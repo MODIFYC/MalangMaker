@@ -111,6 +111,18 @@ async def kakao_skill(request: Request):
             },
             {"label": "명예의 전당 🏆", "action": "message", "messageText": "랭킹"},
         ]
+    # 만렙 상태 버튼
+    elif current_lvl >= 15 and user_input in ["상태"]:
+        img_url = get_malang_image(15, malang["type"])
+        buttons = [
+            {"label": "현재 상태 유지 👌", "action": "message", "messageText": "상태"},
+            {
+                "label": "새로 분양 받기 ✨",
+                "action": "message",
+                "messageText": "분양",
+            },
+            {"label": "명예의 전당 🏆", "action": "message", "messageText": "랭킹"},
+        ]
     # ==========================================
     # 🎮 명령어 분기 처리
     # ==========================================
