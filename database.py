@@ -96,9 +96,6 @@ def get_or_create_malang(user_id, nickname="집사"):
             "last_clean_date": item.get("last_clean_date", ""),
             "clean_count": int(item.get("clean_count", 0)),
         }
-    # 신규 유저 생성
-    malang_types = ["typeA", "typeB", "typeC"]
-    chosen_type = random.choice(malang_types)
 
     new_malang = {
         "user_id": user_id,
@@ -202,7 +199,7 @@ def feed_malang(user_id, room_id):
         new_exp += food["exp"]
         header = "✨ 🎊 [ SUCCESS ] 🎊 ✨"
         body_msg = random.choice(normal_feedback).format(food_name=food["name"])
-        footer = "🍀 말랑이가 다음 밥을 기다려요!"
+        footer = ""
 
     # 3. 사망 시 처리
     if new_health <= 0:
@@ -553,7 +550,6 @@ def get_malang_status(user_id):
     feelings = [
         f"✨ {name}가 당신을 보며 꼬리를 흔들고 있어요!",
         f"💤 {name}가 기분 좋게 낮잠을 자고 싶어 해요.",
-        f"👀 {name}가 배고픈 눈으로 당신의 손을 쳐다봅니다.",
         f"🎵 {name}가 콧노래를 흥얼거리며 꿈틀거리고 있어요!",
         f"💖 {name}는 지금 당신과 함께라 너무 행복하대요!",
     ]
