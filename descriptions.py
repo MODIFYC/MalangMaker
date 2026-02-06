@@ -146,10 +146,10 @@ MALANG_CONFIG = {
 }
 
 
+# 지정한 타입과 레벨에 맞는 title과 desc를 반환하는 함수
 def get_malang_data(malang_type, level, is_dead=False):
-    """지정한 타입과 레벨에 맞는 title과 desc를 반환하는 함수"""
     # 1. 해당 타입의 status 데이터 가져오기 (기본값 typeA)
-    type_conf = MALANG_CONFIG.get(malang_type, MALANG_CONFIG["typeA"])["status"]
+    type_conf = MALANG_CONFIG.get(malang_type, MALANG_CONFIG[malang_type])["status"]
 
     # 2. 사망 상태 처리
     if is_dead:
