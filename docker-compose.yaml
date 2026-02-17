@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  app:
+    # 1. 현재 디렉토리의 Dockerfile을 사용하여 이미지 빌드
+    build: .
+    
+    # 2. 컨테이너 이름 지정
+    container_name: malang-server
+    
+    # 3. 포트 포워딩: 로컬 8000 -> 컨테이너 8000 [1]
+    ports:
+      - "8000:8000"
+    
+    # 4. 환경 변수 설정: AWS 자격 증명이 담긴 .env 파일을 로드 [2]
+    env_file:
+      - .env
+    
+    # 5. 볼륨 마운트: 로컬 코드를 컨테이너의 /app에 실시간 연결
+    # 이를 통해 코드 수정 시 이미지를 다시 빌드할 필요가 없음
+    volumes:
+      - .:/app
+    
+    # 6. 실행 명령어: 개발 모드(--reload)로 FastAPI 실행 [3]
+    # --reload 옵션은 파일 변경을 감지하여 서버를 자동으로 재시작함
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
