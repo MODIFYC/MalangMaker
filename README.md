@@ -5,11 +5,24 @@
 <br>
 
 ## 🎮 주요 기능 및 UI (Screenshots)
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/d43f528c-89a1-4234-a4e8-084dfe48fd47" width="250">
-  <img src="https://github.com/user-attachments/assets/0b461d9a-cd00-4a67-9aec-153398dae973" width="250">
-  <img src="https://github.com/user-attachments/assets/1cd8cfec-beea-498c-8be2-39d7597f7eb8" width="250">
-</p>
+<table>
+  <tr align="center">
+    <th>🧶 말랑이 밥주기</th>
+    <th>🏆 실시간 랭킹 시스템</th>
+    <th>📜 명령어 가이드 (UX)</th>
+  </tr>
+  <tr align="center">
+    <td>
+      <img src="https://github.com/user-attachments/assets/d43f528c-89a1-4234-a4e8-084dfe48fd47" width="250">
+    </td>
+    <td>
+      <img src="https://github.com/user-attachments/assets/0b461d9a-cd00-4a67-9aec-153398dae973" width="250">
+    </td>
+    <td>
+      <img src="https://github.com/user-attachments/assets/1cd8cfec-beea-498c-8be2-39d7597f7eb8" width="250">
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -48,28 +61,38 @@ MalangMaker/
 ```
 ---
 
-## 🛠️ 기술적 고민 및 해결 (Technical Challenges)
+## 🛠️ 기술적 성장 및 문제 해결 (Technical Challenges & Fixes)
+
+프로젝트를 개발하며 마주한 핵심 기술적 난제들과 이를 해결하며 최적화한 기록입니다.
 
 <details>
-<summary><b>상세 내용 보기 (Toggle)</b></summary>
+<summary><b>1. 시스템 성능 및 DB 최적화 (Latency 50% 단축)</b></summary>
 
-1. **DB I/O 최적화 및 응답 지연 시간(Latency) 단축**
-    * UpdateItem 연산 직후 메모리 내 변수를 활용하는 '단일 트랜잭션 내 응답 생성' 방식을 통해 응답 속도를 약 50% 이상 최적화했습니다.
-2. **통신 규격 최적화 및 스키마 정합성 확보**
-    * 모든 응답 포맷을 basicCard로 단일화하여 카카오톡 런타임 스키마 에러를 차단했습니다.
-3. **데이터 정합성 확보**
-    * In-place Update를 통해 액션 성공 시 DB 수치를 로컬 객체에 즉시 동적 갱신하여 별도 재조회 없이 실시간 수치를 전달합니다.
-4. **사용자 경험(UX) 고도화**
-    * 버튼 3개 제한을 극복하기 위해 Quick Replies(바로가기)를 동적으로 노출하는 컨텍스트 기반 UI를 설계했습니다.
+* **Issue**: 빈번한 DB I/O와 `Decimal` 타입 직렬화 문제로 인한 응답 지연 및 500 에러 발생.
+* **Solution**: 
+  - `UpdateItem` 연산 직후 메모리 내 변수를 활용하는 **'단일 트랜잭션 응답 생성'** 방식으로 구조 개선.
+  - DynamoDB 전용 `decimal_to_int` 유틸리티 함수를 구현하여 데이터 정합성과 응답 속도를 동시에 확보.
+* **Result**: 전체적인 API 응답 시간을 기존 대비 50% 이상 단축했습니다.
 </details>
 
 <details>
-<summary><b>📝 최근 업데이트 및 픽스 (Bug Fix Log)</b></summary>
+<summary><b>2. 데이터 정합성 및 동적 로직 고도화</b></summary>
 
-* **사망 로직 개선**: 죽을 때 이미지 URL 반환 시 변수 설정 순서 오류를 해결했습니다.
-* **데이터 정합성**: 필살기로 사망 시 다음 말랑이에게 이전 타입의 대사가 노출되지 않도록 '오리진 타입' 선언 로직을 추가했습니다.
-* **UI 최적화**: 텍스트 길이에 따른 글자 짤림 현상을 카드 분할 방식으로 해결하고, 만렙 도달 시 불필요한 성장 버튼이 나오지 않도록 예외 처리했습니다.
+* **Issue**: 액션 수행(환생/진화) 시 이전 상태값이 잔존하거나 실시간 수치가 미반영되는 현상.
+* **Solution**: 
+  - **In-place Update**: DB 반영 성공 시 로컬 객체 수치를 즉시 동적 갱신하여 재조회 없이 최신 데이터 전달.
+  - **오리진 타입 선언**: 필살기 사망 후 환생 시 이전 타입의 대사가 노출되지 않도록 초기화 로직 강화.
+* **Result**: 다중 사용자가 접속하는 환경에서도 실시간 데이터 정합성을 100% 보장합니다.
+</details>
 
+<details>
+<summary><b>3. 카카오톡 플랫폼 제한을 극복한 UX 설계</b></summary>
+
+* **Issue**: 버튼 3개 제한 및 텍스트 길이 제한으로 인한 UI 가독성 저하.
+* **Solution**: 
+  - **Context-aware UI**: 사용자의 현재 상태(레벨/보유 아이템)에 따라 **Quick Replies(바로가기)**를 동적으로 노출.
+  - **카드 분할 방식**: 긴 텍스트 출력 시 자동 카드 슬라이싱 로직을 적용하여 글자 짤림 현상 방지.
+* **Result**: 플랫폼의 제약 사항을 디자인 패턴으로 해결하여 사용자 경험을 극대화했습니다.
 </details>
 
 ---
