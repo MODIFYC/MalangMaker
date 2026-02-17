@@ -6,9 +6,9 @@
 
 ## 🎮 주요 기능 및 UI (Screenshots)
 <p align="center">
-  <img src="[https://github.com/user-attachments/assets/d43f528c-89a1-4234-a4e8-084dfe48fd47](https://github.com/user-attachments/assets/d43f528c-89a1-4234-a4e8-084dfe48fd47)" width="250">
-  <img src="[https://github.com/user-attachments/assets/0b461d9a-cd00-4a67-9aec-153398dae973](https://github.com/user-attachments/assets/0b461d9a-cd00-4a67-9aec-153398dae973)" width="250">
-  <img src="[https://github.com/user-attachments/assets/1cd8cfec-beea-498c-8be2-39d7597f7eb8](https://github.com/user-attachments/assets/1cd8cfec-beea-498c-8be2-39d7597f7eb8)" width="250">
+  <img src="https://github.com/user-attachments/assets/d43f528c-89a1-4234-a4e8-084dfe48fd47" width="250">
+  <img src="https://github.com/user-attachments/assets/0b461d9a-cd00-4a67-9aec-153398dae973" width="250">
+  <img src="https://github.com/user-attachments/assets/1cd8cfec-beea-498c-8be2-39d7597f7eb8" width="250">
 </p>
 
 ---
@@ -27,14 +27,10 @@
 
 ## 🚀 주요 기능 (Core Features)
 
-<details>
-<summary><b>상세 기능 보기 (Toggle)</b></summary>
-
 * **실시간 육성 시스템**: 밥 주기, 쓰다듬기, 똥 치우기 등 상호작용을 통한 성장 로직.
 * **동적 진화 로직**: 레벨에 따라 총 15단계의 이미지 및 수식어 변화 (Lv.15 전설의 말랑이 달성 가능).
 * **채팅방별 랭킹 (Leaderboard)**: `room_id`를 기반으로 해당 채팅방 내 TOP 3 말랑이 실시간 정렬 및 출력.
 * **고도화된 예외 처리**: 하루 1회 교감 제한, 필살기 사용 시 확률 기반 사망 로직, 만렙 전용 UI 제공 등.
-</details>
 
 ---
 
@@ -64,16 +60,17 @@ MalangMaker/
 3. **데이터 정합성 확보**
     * In-place Update를 통해 액션 성공 시 DB 수치를 로컬 객체에 즉시 동적 갱신하여 별도 재조회 없이 실시간 수치를 전달합니다.
 4. **사용자 경험(UX) 고도화**
-    * 버튼 3개 제한을 극복하기 위해 **Quick Replies(바로가기)**를 동적으로 노출하는 컨텍스트 기반 UI를 설계했습니다.
+    * 버튼 3개 제한을 극복하기 위해 Quick Replies(바로가기)를 동적으로 노출하는 컨텍스트 기반 UI를 설계했습니다.
 </details>
 
----
-
-## 📝 최근 업데이트 및 픽스 (Bug Fix Log)
+<details>
+<summary><b>📝 최근 업데이트 및 픽스 (Bug Fix Log)</b></summary>
 
 * **사망 로직 개선**: 죽을 때 이미지 URL 반환 시 변수 설정 순서 오류를 해결했습니다.
 * **데이터 정합성**: 필살기로 사망 시 다음 말랑이에게 이전 타입의 대사가 노출되지 않도록 '오리진 타입' 선언 로직을 추가했습니다.
 * **UI 최적화**: 텍스트 길이에 따른 글자 짤림 현상을 카드 분할 방식으로 해결하고, 만렙 도달 시 불필요한 성장 버튼이 나오지 않도록 예외 처리했습니다.
+
+</details>
 
 ---
 
