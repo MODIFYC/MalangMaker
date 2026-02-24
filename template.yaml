@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Malang Maker FastAPI Serverless App (Docker Image)
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        DYNAMODB_TABLE: MalangUsers
+        MY_APP_REGION: ap-northeast-2
+
+Resources:
+  MalangMakerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      # 핵심 수정: 소스 코드가 아니라 이미지를 사용한다고 명시
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: MalangUsers
+      Events:
+        MalangApi:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+    Metadata:
+      # Dockerfile 정보 연동
+      Dockerfile: Dockerfile
+      DockerContext: ./
+      DockerTag: v1
+
+Outputs:
+  MalangMakerApi:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
