@@ -2,37 +2,7 @@ from fastapi import FastAPI, Request
 import json
 import time
 import hashlib
-
-# region agent log helper
-_AGENT_LOG_PATH = r"c:\Users\USER\MalangMaker\.cursor\debug.log"
-
-
-def _agent_uid8(value) -> str:
-    try:
-        s = str(value).encode("utf-8", errors="ignore")
-        return hashlib.sha256(s).hexdigest()[:8]
-    except Exception:
-        return "uid_err"
-
-
-def _agent_log(
-    *, runId: str, hypothesisId: str, location: str, message: str, data: dict
-):
-    try:
-        payload = {
-            "sessionId": "debug-session",
-            "runId": runId,
-            "hypothesisId": hypothesisId,
-            "location": location,
-            "message": message,
-            "data": data,
-            "timestamp": int(time.time() * 1000),
-        }
-        with open(_AGENT_LOG_PATH, "a", encoding="utf-8") as f:
-            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
-    except Exception:
-        # 로깅 실패는 서비스 동작에 영향 주지 않음
-        pass
+from mangum import Mangum
 
 
 # endregion
@@ -50,6 +20,8 @@ from database import (
 )
 
 app = FastAPI()
+
+handler = Mangum(app, lifespan="off")
 
 
 @app.post("/message")
@@ -84,38 +56,6 @@ async def kakao_skill(request: Request):
     malang = get_or_create_malang(user_id, nickname)
     current_lvl = int(malang["level"])
     origin_malang_type = malang["type"]
-
-    # region agent log (H5)
-    _agent_log(
-        runId="run1",
-        hypothesisId="H5",
-        location="main.py:kakao_skill:after_parse",
-        message="request parsed",
-        data={
-            "uid8": _agent_uid8(user_id),
-            "room8": _agent_uid8(room_id),
-            "utterance": user_input[:50],
-            "nickname_present": bool(nickname),
-        },
-    )
-    # endregion
-
-    # region agent log (H2)
-    _agent_log(
-        runId="run1",
-        hypothesisId="H2",
-        location="main.py:kakao_skill:after_get_or_create",
-        message="malang loaded",
-        data={
-            "uid8": _agent_uid8(user_id),
-            "malang_keys": sorted(list(malang.keys()))[:25],
-            "level_raw": str(malang.get("level")),
-            "type_raw": str(malang.get("type")),
-            "health_raw": str(malang.get("health")),
-            "exp_raw": str(malang.get("exp")),
-        },
-    )
-    # endregion
 
     quick_replies = []
     # 🎮 명령어 분기 처리
@@ -158,46 +98,9 @@ async def kakao_skill(request: Request):
 
     # 새로 분양 (가이드에 /리셋도 표기되어 있어 동일 처리)
     if "/분양" in user_input or "/리셋" in user_input:
-        # region agent log (H6)
-        _agent_log(
-            runId="run1",
-            hypothesisId="H6",
-            location="main.py:kakao_skill:branch_reset",
-            message="branch selected: reset/adopt",
-            data={"uid8": _agent_uid8(user_id), "room8": _agent_uid8(room_id)},
-        )
-        # endregion
         try:
             msg, img_url = reset_malang_data(user_id, room_id)
-            # region agent log (H6)
-            _agent_log(
-                runId="run1",
-                hypothesisId="H6",
-                location="main.py:kakao_skill:after_reset",
-                message="reset returned",
-                data={
-                    "uid8": _agent_uid8(user_id),
-                    "msg_len": len(msg or ""),
-                    "msg_head": (msg or "")[:40],
-                    "img_url_head": (img_url or "")[:60],
-                    "img_url_empty": not bool(img_url),
-                },
-            )
-            # endregion
         except Exception as e:
-            # region agent log (H6)
-            _agent_log(
-                runId="run1",
-                hypothesisId="H6",
-                location="main.py:kakao_skill:reset_exception",
-                message="exception in reset_malang_data call",
-                data={
-                    "uid8": _agent_uid8(user_id),
-                    "err_type": type(e).__name__,
-                    "err_msg": str(e)[:200],
-                },
-            )
-            # endregion
             raise
 
     # 만렙 제한 로직 (밥, 쓰다듬기, 기술 방어)
@@ -234,30 +137,7 @@ async def kakao_skill(request: Request):
     # ==========================================
     # 1. 밥 주기
     elif "/밥" in user_input:
-        # region agent log (H5)
-        _agent_log(
-            runId="run1",
-            hypothesisId="H5",
-            location="main.py:kakao_skill:branch_feed",
-            message="branch selected: feed",
-            data={"uid8": _agent_uid8(user_id), "room8": _agent_uid8(room_id)},
-        )
-        # endregion
         msg, img_url = feed_malang(user_id, room_id)
-        # region agent log (H4)
-        _agent_log(
-            runId="run1",
-            hypothesisId="H4",
-            location="main.py:kakao_skill:after_feed",
-            message="feed returned",
-            data={
-                "uid8": _agent_uid8(user_id),
-                "msg_len": len(msg or ""),
-                "img_url_head": (img_url or "")[:60],
-                "img_url_has_dead": bool(img_url and "dead" in img_url),
-            },
-        )
-        # endregion
         if img_url and "dead" in img_url:
             buttons = [
                 {
@@ -398,24 +278,5 @@ async def kakao_skill(request: Request):
             ]
         },
     }
-    # region agent log (H7)
-    _agent_log(
-        runId="run1",
-        hypothesisId="H7",
-        location="main.py:kakao_skill:before_return",
-        message="response assembled",
-        data={
-            "uid8": _agent_uid8(user_id),
-            "utterance": user_input[:20],
-            "msg_len": len(msg or ""),
-            "img_url_head": (img_url or "")[:60],
-            "buttons_cnt": len(buttons or []),
-            "outputs_cnt": len(res_card.get("template", {}).get("outputs", [])),
-            "has_itemCard": any(
-                isinstance(o, dict) and "itemCard" in o
-                for o in res_card.get("template", {}).get("outputs", [])
-            ),
-        },
-    )
     # endregion
     return res_card

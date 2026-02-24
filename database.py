@@ -1,39 +1,3 @@
-# region agent log helper
-import json
-import time
-import hashlib
-
-_AGENT_LOG_PATH = r"c:\Users\USER\MalangMaker\.cursor\debug.log"
-
-
-def _agent_uid8(value) -> str:
-    try:
-        s = str(value).encode("utf-8", errors="ignore")
-        return hashlib.sha256(s).hexdigest()[:8]
-    except Exception:
-        return "uid_err"
-
-
-def _agent_log(
-    *, runId: str, hypothesisId: str, location: str, message: str, data: dict
-):
-    try:
-        payload = {
-            "sessionId": "debug-session",
-            "runId": runId,
-            "hypothesisId": hypothesisId,
-            "location": location,
-            "message": message,
-            "data": data,
-            "timestamp": int(time.time() * 1000),
-        }
-        with open(_AGENT_LOG_PATH, "a", encoding="utf-8") as f:
-            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
-    except Exception:
-        pass
-
-
-# endregion
 # ==========================================
 # ⚙️ 1. 초기 설정 및 환경 변수 (CONFIG)
 # ==========================================
@@ -48,13 +12,24 @@ from descriptions import get_malang_data, USER_TITLES, MALANG_CONFIG
 
 load_dotenv()
 
-# DynamoDB 접속 설정
-dynamodb = boto3.resource(
-    "dynamodb",
-    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-    region_name=os.getenv("AWS_REGION"),
-)
+# 환경 변수에 따라 다르게 동작하도록 설정
+if os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+    # Lambda 환경: IAM Role을 자동으로 사용하므로 별도 Key가 필요 없음
+    dynamodb = boto3.resource(
+        "dynamodb", region_name=os.getenv("AWS_REGION", "ap-northeast-2")
+    )
+else:
+    # 로컬 환경: 기존 방식대로 .env 사용 [1]
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    dynamodb = boto3.resource(
+        "dynamodb",
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        region_name=os.getenv("AWS_REGION"),
+    )
+
 table = dynamodb.Table("MalangUsers")
 
 
@@ -195,20 +170,6 @@ def reset_malang_data(user_id, room_id):
     try:
         new_type = random.choice(["typeA", "typeB", "typeC"])
 
-        # region agent log (H6)
-        _agent_log(
-            runId="run1",
-            hypothesisId="H6",
-            location="database.py:reset_malang_data:entry",
-            message="reset entry",
-            data={
-                "uid8": _agent_uid8(user_id),
-                "room8": _agent_uid8(room_id),
-                "new_type": new_type,
-            },
-        )
-        # endregion
-
         initial_title, _ = get_malang_data(new_type, 1)
 
         malang = get_or_create_malang(user_id)
@@ -240,35 +201,8 @@ def reset_malang_data(user_id, room_id):
         )
 
         img_url = get_malang_image(1, new_type)
-        # region agent log (H6)
-        _agent_log(
-            runId="run1",
-            hypothesisId="H6",
-            location="database.py:reset_malang_data:success",
-            message="reset success",
-            data={
-                "uid8": _agent_uid8(user_id),
-                "new_type": new_type,
-                "msg_len": len(msg),
-                "img_url_head": (img_url or "")[:60],
-            },
-        )
-        # endregion
         return msg, img_url
     except Exception as e:
-        # region agent log (H6)
-        _agent_log(
-            runId="run1",
-            hypothesisId="H6",
-            location="database.py:reset_malang_data:exception",
-            message="reset exception",
-            data={
-                "uid8": _agent_uid8(user_id),
-                "err_type": type(e).__name__,
-                "err_msg": str(e)[:200],
-            },
-        )
-        # endregion
         print(f"Error: {e}")  # 로그 확인용
         return f"분양 과정에서 오류가 발생했어요: {e}", ""
 
@@ -283,44 +217,11 @@ def feed_malang(user_id, room_id):
         malang = get_or_create_malang(user_id)
         rand_val = random.random()  # 0.0 ~ 1.0 사이의 랜덤값
 
-        # region agent log (H2)
-        _agent_log(
-            runId="run1",
-            hypothesisId="H2",
-            location="database.py:feed_malang:entry",
-            message="feed_malang entry",
-            data={
-                "uid8": _agent_uid8(user_id),
-                "room8": _agent_uid8(room_id),
-                "malang_keys": sorted(list(malang.keys()))[:25],
-                "level_raw": str(malang.get("level")),
-                "type_raw": str(malang.get("type")),
-                "health_raw": str(malang.get("health")),
-                "exp_raw": str(malang.get("exp")),
-            },
-        )
-        # endregion
-
         new_health = int(malang["health"])
         new_level = int(malang["level"])
         new_exp = int(malang["exp"])
         malang_type = malang.get("type", "typeA")
         malang_display_name = malang.get("malang_name", "말랑이")
-
-        # region agent log (H1)
-        _agent_log(
-            runId="run1",
-            hypothesisId="H1",
-            location="database.py:feed_malang:before_config",
-            message="type/config check",
-            data={
-                "uid8": _agent_uid8(user_id),
-                "malang_type": str(malang_type),
-                "type_in_config": bool(malang_type in MALANG_CONFIG),
-                "rand_val": rand_val,
-            },
-        )
-        # endregion
 
         malang_name = MALANG_CONFIG.get(malang_type, MALANG_CONFIG[malang_type])[
             "status"
@@ -350,15 +251,6 @@ def feed_malang(user_id, room_id):
         # 2. 확률별 로직 처리
         # [0.5% 확률] 전설의 만두 (희귀!!)
         if rand_val < 0.005:
-            # region agent log (H1)
-            _agent_log(
-                runId="run1",
-                hypothesisId="H1",
-                location="database.py:feed_malang:branch",
-                message="branch selected: legend",
-                data={"uid8": _agent_uid8(user_id), "rand_val": rand_val},
-            )
-            # endregion
             new_level += 1
             new_health = 100
             new_exp = 0
@@ -372,15 +264,6 @@ def feed_malang(user_id, room_id):
 
         # [15% 확률] 상한 밥 (실패!!)
         elif rand_val < 0.155:
-            # region agent log (H1)
-            _agent_log(
-                runId="run1",
-                hypothesisId="H1",
-                location="database.py:feed_malang:branch",
-                message="branch selected: bad",
-                data={"uid8": _agent_uid8(user_id), "rand_val": rand_val},
-            )
-            # endregion
             damage = random.randint(15, 30)
             new_health -= damage
             header = "💀⛈️ [ F A I L ] ⛈️💀"
@@ -393,15 +276,6 @@ def feed_malang(user_id, room_id):
 
         # [그 외] 무난한 밥 (성공!!)
         else:
-            # region agent log (H1)
-            _agent_log(
-                runId="run1",
-                hypothesisId="H1",
-                location="database.py:feed_malang:branch",
-                message="branch selected: normal",
-                data={"uid8": _agent_uid8(user_id), "rand_val": rand_val},
-            )
-            # endregion
             normal_foods = [
                 {"name": "고소한 콩떡", "heal": 10, "exp": 15},
                 {"name": "달콤한 꿀단지", "heal": 20, "exp": 10},
@@ -496,19 +370,6 @@ def feed_malang(user_id, room_id):
 
         return final_msg, image_url
     except Exception as e:
-        # region agent log (H3)
-        _agent_log(
-            runId="run1",
-            hypothesisId="H3",
-            location="database.py:feed_malang:exception",
-            message="exception in feed_malang",
-            data={
-                "uid8": _agent_uid8(user_id),
-                "err_type": type(e).__name__,
-                "err_msg": str(e)[:200],
-            },
-        )
-        # endregion
         raise
 
 
