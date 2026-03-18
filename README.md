@@ -228,15 +228,7 @@ Variables:
 </details>
 
 <details>
-<summary><b>이슈 6: {"detail":"Method Not Allowed"} — 사실 성공의 증거</b></summary>
-
-- **현상**: 배포 성공 후 API Gateway URL로 브라우저 접속 시 `{"detail":"Method Not Allowed"}` 응답.
-- **원인(아닌 이유)**: 브라우저 주소창은 GET 요청을 보내지만, API는 POST만 허용하도록 설계됨. FastAPI가 정상적으로 방어한 것.
-- **결론**: 에러가 아니라 서버가 정상 동작하고 있다는 신호. ✅
-</details>
-
-<details>
-<summary><b>이슈 7: Terraform Remote Backend — EntityAlreadyExists 충돌</b></summary>
+<summary><b>이슈 6: Terraform Remote Backend — EntityAlreadyExists 충돌</b></summary>
 
 - **현상**: GitHub Actions에서 `terraform apply` 실행 시 IAM 유저/그룹 전부 `EntityAlreadyExists` 에러.
 - **원인**: 로컬에서 `terraform import`로 가져온 `terraform.tfstate`가 `.gitignore`에 의해 GitHub에 올라가지 않음. GitHub Actions는 빈 state에서 시작하여 기존 리소스를 새로 만들려다 충돌.
