@@ -4,7 +4,7 @@ venv/
 __pycache__/
 images/ 
 .aws-sam/
-# 테라폼 관련 무시 목록
+
 .terraform/
 *.tfstate
 *.tfstate.backup
