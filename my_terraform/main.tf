@@ -5,6 +5,11 @@ terraform {
       version = "~> 5.0"
     }
   }
+  backend "s3" {
+    bucket = "aws-sam-cli-managed-default-samclisourcebucket-q9vup2aib9cv"
+    key    = "iam/terraform.tfstate"
+    region = "ap-northeast-2"
+  }
 }
 
 provider "aws" {
