@@ -4,7 +4,7 @@ version = 0.1
 stack_name = "malang-maker"
 resolve_s3 = true
 s3_prefix = "malang-maker"
-confirm_changeset = true
+confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
 image_repositories = ["MalangMakerFunction=212315285588.dkr.ecr.ap-northeast-2.amazonaws.com/malangmaker791a2d3b/malangmakerfunction6a0fc02crepo"]
 
