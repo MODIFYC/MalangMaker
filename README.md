@@ -152,37 +152,116 @@ MalangMaker/
 
 ---
 
-## 🛠️ 기술적 도전 및 해결
+## 🔥 트러블슈팅
 
 <details>
-<summary><b>1. 시스템 성능 및 DB 최적화 (Latency 50% 단축)</b></summary>
+<summary><b>이슈 1: 카카오톡 NetworkAccessForbidden — 응답 자체가 없음</b></summary>
 
-- **Issue**: 빈번한 DB I/O와 `Decimal` 타입 직렬화 문제로 인한 응답 지연 및 500 에러 발생.
-- **Solution**:
-  - `UpdateItem` 연산 직후 메모리 내 변수를 활용하는 **단일 트랜잭션 응답 생성** 방식으로 구조 개선.
-  - DynamoDB 전용 `decimal_to_int` 유틸리티 함수 구현으로 데이터 정합성과 응답 속도 동시 확보.
-- **Result**: 전체 API 응답 시간을 기존 대비 50% 이상 단축.
+- **현상**: 카카오톡 채널에서 메시지를 보내도 응답이 없고, 카카오 설정 페이지에서 '네트워크 오류'만 표시. 503 같은 에러 코드조차 뜨지 않음.
+- **원인**: Dockerfile의 베이스 이미지 문제. 일반 `python:3.10-slim` 이미지를 사용했는데, AWS Lambda는 전용 런타임 환경이 필요함. 일반 이미지를 쓰면 Lambda가 Init 단계조차 실패하여 카카오 입장에서는 연결 거부로 판단.
+- **해결**: 베이스 이미지를 AWS 공식 Lambda 전용 이미지로 변경.
+
+```dockerfile
+# 변경 전
+FROM python:3.10-slim
+
+# 변경 후
+FROM public.ecr.aws/lambda/python:3.10
+```
 </details>
 
 <details>
-<summary><b>2. 데이터 정합성 및 동적 로직 고도화</b></summary>
+<summary><b>이슈 2: 카카오톡 NetworkAccessForbidden — 503 에러</b></summary>
 
-- **Issue**: 액션 수행(환생/진화) 시 이전 상태값이 잔존하거나 실시간 수치가 미반영되는 현상.
-- **Solution**:
-  - **In-place Update**: DB 반영 성공 시 로컬 객체 수치를 즉시 동적 갱신하여 재조회 없이 최신 데이터 전달.
-  - **오리진 타입 선언**: 필살기 사망 후 환생 시 이전 타입의 대사가 노출되지 않도록 초기화 로직 강화.
-- **Result**: 다중 사용자 환경에서도 실시간 데이터 정합성 100% 보장.
+- **현상**: 카카오 챗봇에서 응답이 없고 네트워크 오류 발생.
+- **원인**: Lambda 내부에서 500대 에러가 발생하면 카카오 측에서 연결을 강제로 끊음.
+- **접근**: `sam logs -n MalangMakerFunction --stack-name malang-maker --tail` 로 Lambda 로그 직접 확인.
+- **해결**: Mangum lifespan 옵션 수정 후 재배포.
+
+```python
+# 변경 전
+handler = Mangum(app)
+
+# 변경 후
+handler = Mangum(app, lifespan="off")
+```
 </details>
 
 <details>
-<summary><b>3. 카카오톡 플랫폼 제한을 극복한 UX 설계</b></summary>
+<summary><b>이슈 3: Runtime.ImportModuleError — Unable to import module 'main'</b></summary>
 
-- **Issue**: 버튼 3개 제한 및 텍스트 길이 제한으로 인한 UI 가독성 저하.
-- **Solution**:
-  - **Context-aware UI**: 사용자의 현재 상태(레벨/보유 아이템)에 따라 Quick Replies를 동적으로 노출.
-  - **카드 분할 방식**: 긴 텍스트 출력 시 자동 카드 슬라이싱 로직을 적용하여 글자 짤림 현상 방지.
-- **Result**: 플랫폼 제약을 디자인 패턴으로 해결하여 사용자 경험 극대화.
+- **현상**: Lambda 로그에서 `main.py`를 찾지 못하는 에러 발생.
+- **원인**: 이미지 경로가 꼬이거나 기존 빌드 캐시가 엉뚱하게 올라간 상태.
+- **해결**: 빌드 캐시 완전 삭제 후 재빌드.
+
+```bash
+rmdir /s /q .aws-sam           # 캐시 완전 삭제
+sam build --use-container      # Docker 환경에서 재빌드
+sam deploy                     # 재배포
+```
 </details>
+
+<details>
+<summary><b>이슈 4: AWS_REGION 예약어 충돌</b></summary>
+
+- **현상**: `template.yaml` 환경 변수에 `AWS_REGION`을 설정하자 배포 경고 발생, Lambda 실행 시 리전 정보를 제대로 못 불러옴.
+- **원인**: `AWS_REGION`은 Lambda 런타임이 자동으로 설정하는 예약 환경 변수. 사용자가 임의로 덮어쓰려 하면 충돌 경고가 발생하거나 값이 무시됨.
+- **해결**: 커스텀 변수명으로 변경.
+
+```yaml
+# 변경 전
+Variables:
+  AWS_REGION: ap-northeast-2   # 예약어 — 위험!
+
+# 변경 후
+Variables:
+  MY_APP_REGION: ap-northeast-2  # 안전한 커스텀 변수
+```
+</details>
+
+<details>
+<summary><b>이슈 5: 이미지 파일 증발 — .dockerignore 실수</b></summary>
+
+- **현상**: 배포 후 Lambda 로그에서 이미지 파일을 찾지 못하는 에러 발생.
+- **원인**: `.dockerignore`에 `images/` 폴더가 실수로 포함되어 이미지만 컨테이너에 포함되지 않음.
+- **해결**: `.dockerignore`에서 해당 줄 제거 후 재빌드 및 재배포.
+</details>
+
+<details>
+<summary><b>이슈 6: {"detail":"Method Not Allowed"} — 사실 성공의 증거</b></summary>
+
+- **현상**: 배포 성공 후 API Gateway URL로 브라우저 접속 시 `{"detail":"Method Not Allowed"}` 응답.
+- **원인(아닌 이유)**: 브라우저 주소창은 GET 요청을 보내지만, API는 POST만 허용하도록 설계됨. FastAPI가 정상적으로 방어한 것.
+- **결론**: 에러가 아니라 서버가 정상 동작하고 있다는 신호. ✅
+</details>
+
+<details>
+<summary><b>이슈 7: Terraform Remote Backend — EntityAlreadyExists 충돌</b></summary>
+
+- **현상**: GitHub Actions에서 `terraform apply` 실행 시 IAM 유저/그룹 전부 `EntityAlreadyExists` 에러.
+- **원인**: 로컬에서 `terraform import`로 가져온 `terraform.tfstate`가 `.gitignore`에 의해 GitHub에 올라가지 않음. GitHub Actions는 빈 state에서 시작하여 기존 리소스를 새로 만들려다 충돌.
+- **해결**: S3 Remote Backend 설정으로 state 파일을 중앙 관리.
+
+```hcl
+backend "s3" {
+  bucket = "aws-sam-cli-managed-default-samclisourcebucket-xxxx"
+  key    = "iam/terraform.tfstate"
+  region = "ap-northeast-2"
+}
+```
+
+```bash
+terraform init -migrate-state  # 로컬 state → S3 마이그레이션
+```
+</details>
+
+---
+
+## 🔗 서비스 링크
+
+카카오톡에서 **말랑이 메이커** 채널을 추가하고 직접 육성해보세요!
+
+👉 [말랑이 메이커 카카오톡 채널](https://pf.kakao.com/_kRFRX)
 
 ---
 
