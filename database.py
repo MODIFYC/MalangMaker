@@ -381,6 +381,10 @@ def stroking_malang(user_id, room_id):
     today = datetime.now().strftime("%Y-%m-%d")
     last_date = malang.get("last_stroking_malang", "")
     print(f"DEBUG DB DATA: {malang}")
+    # 사망 상태 체크
+    if malang.get("type") == "none" or int(malang.get("health", 0)) == 0:
+        return "💀 말랑이가 무지개 다리를 건넜어요...\n환생시켜주세요!", ""
+
     malang_type = malang.get("type", "typeA")
 
     new_level = int(malang["level"])
@@ -463,6 +467,10 @@ def clean_malang(user_id, room_id):
     # DB에서 날짜와 횟수 가져오기 (없으면 초기값)
     last_date = malang.get("last_clean_date", "")
     clean_count = int(malang.get("clean_count", 0))
+    # 사망 상태 체크
+    if malang.get("type") == "none" or int(malang.get("health", 0)) == 0:
+        return "💀 말랑이가 무지개 다리를 건넜어요...\n환생시켜주세요!", ""
+
     malang_type = malang.get("type", "typeA")
 
     # 날짜가 바뀌었으면 횟수 초기화
