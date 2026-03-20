@@ -117,6 +117,7 @@ resource "aws_iam_group_policy_attachment" "deployer" {
 resource "aws_cloudwatch_event_rule" "warmup" {
   name                = "lambda-warmup"          # 원하는 이름으로
   schedule_expression = "rate(5 minutes)"        # 간격 조절 가능
+  depends_on = [aws_iam_group_policy_attachment.deployer]  
 }
 
 # Lambda를 타겟으로 연결
