@@ -27,7 +27,7 @@
 
 ## 🏗️ 아키텍처 다이어그램
 
-![말랑이 AWS Architecture](https://github.com/user-attachments/assets/e8e6ce69-c7cf-4a95-bff4-073b2dfc2ac7)
+![말랑이 AWS Architecture](https://github.com/user-attachments/assets/1f8f77e5-e1cd-4dc1-9335-af7e2e61b3c8)
 
 ---
 
