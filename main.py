@@ -18,7 +18,16 @@ from database import (
 
 app = FastAPI()
 
-handler = Mangum(app, lifespan="off")
+mangum_handler = Mangum(app, lifespan="off")
+
+
+def handler(event, context):
+    # warmup 요청 감지
+    if event.get("source") == "warmup":
+        return {"statusCode": 200}
+
+    # 실제 요청은 Mangum으로
+    return mangum_handler(event, context)
 
 
 @app.post("/message")
