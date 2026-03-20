@@ -55,7 +55,7 @@
 | 평균 응답시간 | 49ms |
 | p95 응답시간 | 67ms |
 | 에러율 | 0% |
-| 콜드 스타트 | 최대 1.86s (Lambda 컨테이너 초기화) |
+| 콜드 스타트 | 해결 (EventBridge 웜업 적용, 최대 284ms) |
 | 월 운영 비용 | $1 미만 |
 | 운영 기간 | 2024.02 ~ 현재 |
 
@@ -162,13 +162,28 @@ PR: terraform plan  →  main 머지: terraform apply
 |------|---------|---------|
 | 평균 응답시간 | 50ms | 56ms |
 | p95 응답시간 | 70ms | 75ms |
-| 에러율 | 0% ✅ | 0% ✅ |
+| 최대 응답시간 |     6s (콜드 스타트) |
+| 에러율 | 0%  | 0%  |
 | Throttle | 미발생 | 미발생 |
 
 ### 분석
 - **콜드 스타트**: 15분 유휴 후 첫 요청 최대 6s → 이후 16ms로 안정화 (서버리스 특성)
 - **자동 스케일링**: 50명 동시 요청에서 Throttle 0건 → Lambda 자동 확장 정상 동작
 - **비즈니스 로직 안정성**: 하루 1회 제한, DB 쓰기 로직 동시 요청에서도 정상 동작 확인
+
+### 3차 테스트 결과 (웜업 적용 후 — 콜드 스타트 개선 확인)
+
+| 지표 | 결과 |
+|------|------|
+| 평균 응답시간 | 56ms |
+| p95 응답시간 | 78.63ms |
+| 최대 응답시간 | 284ms |
+| 에러율 | 0%  |
+| Throttle | 미발생 |
+
+### 분석
+- **콜드 스타트 해결**: EventBridge 웜업(5분 간격) 적용 → 첫 요청부터 즉시 응답
+- **응답시간 안정화**: 기존 최대 6s 지연 제거, 최대 284ms 이내로 개선
 
 ---
 
@@ -179,6 +194,7 @@ PR: terraform plan  →  main 머지: terraform apply
 - Docker 이미지 빌드 캐시 문제 → **캐시 제거 및 재빌드**로 해결
 - AWS_REGION 예약어 충돌 → **커스텀 변수명(`MY_APP_REGION`)** 으로 변경
 - Terraform state 관리 문제(EntityAlreadyExists) → **S3 Remote Backend 도입**으로 해결
+- Lambda 콜드스타트 6s 지연 → EventBridge 웜업으로 해결
 
 👉 상세 내용은 [포트폴리오](https://modifyc.github.io) 참고
 
@@ -195,7 +211,7 @@ MalangMaker/
 ├── Dockerfile               # 컨테이너 빌드 설정
 ├── template.yaml            # SAM 배포 설정
 ├── samconfig.toml           # SAM 배포 파라미터
-├── my_terraform/            # Terraform IaC (IAM 리소스)
+├── my_terraform/            # Terraform IaC
 │   ├── main.tf
 │   ├── variables.tf
 │   └── outputs.tf
